@@ -1,0 +1,30 @@
+{
+  "name": "server_bybus_v8",
+  "version": "1.8.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+	"keywords": [
+    "node.js",
+    "express",
+    "sequelize",
+    "jwt",
+    "authentication",
+    "postgresql"
+  ],
+  "author": "Alexander Nasokin",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "pg": "^8.8.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.21.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
