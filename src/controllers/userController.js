@@ -1,3 +1,5 @@
+const ApiError = require('../errors/ApiError')
+
 class UserController {
 	async register(req, res) {
 
@@ -7,9 +9,13 @@ class UserController {
 
 	}
 
-	async check(req, res) {
-		res.status(200).json({message: 'User controller wotks!'})
-	}
+	async check(req, res, next) {
+		const {id} = req.query
+		if (!id) {
+			return next(ApiError.valueNotDefined('ID is not defined'))
+		}
+		res.status(200).json({message: `ID = ${id}`})
+	}	
 }
 
 module.exports = new UserController()
