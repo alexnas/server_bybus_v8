@@ -12,7 +12,7 @@ class UserController {
 	async check(req, res, next) {
 		const {id} = req.query
 		if (!id) {
-			return next(ApiError.valueNotDefined('ID is not defined'))
+			return next(ApiError.wrongValue('ID is not defined'))
 		}
 		res.status(200).json({message: `ID = ${id}`})
 	}	

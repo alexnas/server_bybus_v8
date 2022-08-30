@@ -9,7 +9,7 @@ class ApiError extends Error {
 		return new ApiError(404, message)
 	}
 
-	static valueNotDefined(message) {
+	static wrongValue(message) {
 		return new ApiError(409, message)
 	}
 
