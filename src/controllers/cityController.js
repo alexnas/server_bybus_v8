@@ -21,7 +21,6 @@ class CityController {
 
 			const city = await City.create({name, description, provinceId})
 			res.json({city})
-			
 		} catch (e) {
 			return next(ApiError.internal('Server error'))
 		}
@@ -52,6 +51,11 @@ class CityController {
 			if (!name || name.trim() === '') {
 				return next(ApiError.wrongValue('Name is not defined'))
 			}
+			const candidate = await City.findOne({where: {name}})
+			if (candidate && (candidate.id !== +id)) {
+				return next(ApiError.wrongValue('This city name is already registered'))
+			}
+			
 			const city = await City.findOne({where: {id}})
 			if (!city) {
 					return next(ApiError.badRequest('There is no such city registered'))
@@ -63,7 +67,7 @@ class CityController {
 			}
 			if (!choosenProvince) provinceId = null
 
-			city.update({name, description, provinceId})
+			await city.update({name, description, provinceId})
 			res.json(city);
 		} catch (e) {
 			return next(ApiError.internal('Server error'))
@@ -77,7 +81,7 @@ class CityController {
 			if (!city) {
 				return next(ApiError.badRequest('There is no such city registered'))
 			}
-			const deleted = await city.destroy()
+			await city.destroy()
 			res.json({id})
 		} catch (e) {
 			return next(ApiError.internal('Server error'))

@@ -69,8 +69,8 @@ class CompanyController {
 			if (!company) {
 				return next(ApiError.badRequest('This company is not registered'))
 			}
-			company.destroy()
-			res.json(company)
+			await company.destroy()
+			res.json(id)
 		} catch (e) {
 			return next(ApiError.internal('Server error'))
 		}
