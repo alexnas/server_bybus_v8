@@ -12,6 +12,7 @@ const User = sequelize.define('user', {
 const Role = sequelize.define('role', {
 	id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
 	name: {type: DataTypes.STRING, unique: true, allowNull: false },
+  description: { type: DataTypes.STRING },
 })
 
 const Comment = sequelize.define('comment', {
@@ -226,7 +227,7 @@ BusInfo.belongsTo(BusService);
 
 module.exports = {
   User,
-	ROLES,
+	Role,
   Comment,
   Company,
   CompanyInfo,
