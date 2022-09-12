@@ -27,14 +27,40 @@ class AuthController {
 			user.setRoles(rolesIdx)
 			
 			const token = generateAccessToken({email})
-			res.json({token})
-			
+			return res.json({token})
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during signup'))
 		}
 	}
 
-	async login(req, res) {
+	async login(req, res, next) {
+		try {
+			const {email, password} = req.body
+			const user = await User.findOne({where: {email}})
+			if (!user) {
+				return next(ApiError.forbidden('The user with this email was not found'))
+			}
+
+			let comparePasswords = bcrypt.compareSync(password, user.password)
+			if(!comparePasswords) {
+				return next(ApiError.forbidden('Authentication failed'))
+			}
+
+			const token = generateAccessToken({email})
+			const userRoles = await user.getRoles()
+			const roles = userRoles.map(role => role.name)
+
+			return res.json({
+				id: user.id, 
+				name: user.name, 
+				email: user.email, 
+				roles, 
+				accessToken: token
+			})			
+		} catch (e) {
+			
+		}
+
 
 	}
 
