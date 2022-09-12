@@ -1,5 +1,5 @@
-// require('dotenv').config();
 const bcrypt = require('bcrypt');
+const {validationResult} = require('express-validator');
 const ApiError = require('../errors/ApiError');
 const { User, Role } = require('../models/models');
 const { generateAccessToken } = require('../services/tokenService');
@@ -8,11 +8,16 @@ const { DEFAULT_ROLE } = require('../constants/authConstants');
 class AuthController {
 	async signup(req, res, next) {
 		try {
+			const errors = validationResult(req)
+			if (!errors.isEmpty()) {
+				return next(ApiError.wrongValue(`Singup validation error: ${errors.array()[0].msg} of ${errors.array()[0].param}`))
+			}
+
 			let {name, email, password} = req.body
 			const allRoles = await Role.findAll()
 			const defaultRole = await Role.findOne({where: {name: DEFAULT_ROLE}})
 			if (!defaultRole) {
-				return next(ApiError.internal('Default Role Error'))
+				return next(ApiError.wrongValue('Default Role Error'))
 			}
 			let roles = [DEFAULT_ROLE]
 			if (req.body.roles) {
@@ -26,7 +31,7 @@ class AuthController {
 			const user = await User.create({email, name, password: hashPassword})
 			user.setRoles(rolesIdx)
 			
-			const token = generateAccessToken({email})
+			const token = generateAccessToken({email: user.email})
 			return res.json({token})
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during signup'))
