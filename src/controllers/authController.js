@@ -1,9 +1,8 @@
-const bcrypt = require('bcrypt');
 const {validationResult} = require('express-validator');
 const ApiError = require('../errors/ApiError');
-const { User, Role } = require('../models/models');
+const { User } = require('../models/models');
 const { generateAccessToken } = require('../services/tokenService');
-const { DEFAULT_ROLE } = require('../constants/authConstants');
+const authService = require('../services/authService')
 
 class AuthController {
 	async signup(req, res, next) {
@@ -13,23 +12,9 @@ class AuthController {
 				return next(ApiError.wrongValue(`Singup validation error: ${errors.array()[0].msg} of ${errors.array()[0].param}`))
 			}
 
-			let {name, email, password} = req.body
-			const allRoles = await Role.findAll()
-			const defaultRole = await Role.findOne({where: {name: DEFAULT_ROLE}})
-			if (!defaultRole) {
-				return next(ApiError.wrongValue('Default Role Error'))
-			}
-			let roles = [DEFAULT_ROLE]
-			if (req.body.roles) {
-				const rolesRaw = req.body.roles
-				roles = JSON.parse(rolesRaw)	
-			}
-
-			const rolesIdx = allRoles.filter(role => roles.includes(role.name)).map(role => +role.id)
-
-			const hashPassword = await bcrypt.hash(password, 5)
-			const user = await User.create({email, name, password: hashPassword})
-			user.setRoles(rolesIdx)
+			let {name, email, password, roles} = req.body
+			const roleIds = await authService.getSignupRoleIds(roles, next)
+			const user = await authService.signup(name, email, password, roleIds, next)
 			
 			const token = generateAccessToken({email: user.email})
 			return res.json({token})
