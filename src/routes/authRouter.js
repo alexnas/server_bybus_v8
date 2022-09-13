@@ -4,8 +4,7 @@ const {body} = require('express-validator');
 const authController = require('../controllers/authController')
 const { checkDuplicates, checkRolesValid } = require('../middleware/VerifySignupMiddleware')
 
-router.post(
-	'/signup', 
+router.post('/signup', 
 	[checkDuplicates, checkRolesValid], 
 	body('email').isEmail(),
 	body('password').isLength({min: 6, max: 32}),
@@ -13,6 +12,8 @@ router.post(
 	authController.signup
 )
 router.post('/login', authController.login)
+router.get('/logout', authController.logout)
+router.get('/refresh', authController.refresh)
 router.get('/auth', authController.check)
 
 module.exports = router

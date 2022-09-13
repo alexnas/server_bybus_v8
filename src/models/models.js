@@ -8,11 +8,17 @@ const User = sequelize.define('user', {
   password: { type: DataTypes.STRING },
 });
 
+const RefreshToken = sequelize.define('refresh_token', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  tokenValue: {type: DataTypes.STRING, unique: true, allowNull: false },
+	userId: {type: DataTypes.INTEGER, allowNull: false },
+});
+
 const Role = sequelize.define('role', {
 	id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
 	name: {type: DataTypes.STRING, unique: true, allowNull: false },
   description: { type: DataTypes.STRING },
-})
+});
 
 const Comment = sequelize.define('comment', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -123,12 +129,14 @@ const BusService = sequelize.define('bus_service', {
 
 const ROLES = ["user", "admin", "moderator"];
 
+User.hasOne(RefreshToken);
+RefreshToken.belongsTo(User, { foreignKey: 'userId' });
+
 Role.belongsToMany(User, {
   through: "user_role",
   foreignKey: "roleId",
   otherKey: "userId"
 });
-
 User.belongsToMany(Role, {
   through: "user_role",
   foreignKey: "userId",
@@ -226,6 +234,7 @@ BusInfo.belongsTo(BusService);
 
 module.exports = {
   User,
+	RefreshToken,
 	Role,
   Comment,
   Company,

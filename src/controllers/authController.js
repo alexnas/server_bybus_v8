@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const {validationResult} = require('express-validator');
 const ApiError = require('../errors/ApiError');
 const { User } = require('../models/models');
-const { generateTokens } = require('../services/tokenService');
+const { generateTokens, saveToken } = require('../services/tokenService');
 const authService = require('../services/authService');
 const { userObj } = require('../services/authService');
 const { COOKIE_MAX_AGE } = require('../constants/authConstants');
@@ -39,10 +39,12 @@ class AuthController {
 				return next(ApiError.forbidden('Authentication failed'))
 			}
 
-			const {accessToken} = generateTokens({email: user.email})
+			const {accessToken, refreshToken} = generateTokens({email: user.email})
 			const userRoles = await user.getRoles()
 			const roles = userRoles.map(role => role.name)
 			const userObject = userObj(user)
+
+			await saveToken(next, userObject.id, refreshToken);
 
 			return res.json({
 				userData: {
@@ -54,6 +56,25 @@ class AuthController {
 			return next(ApiError.internal('Unforseen error during login'))
 		}
 	}
+
+	async logout(req, res, next) {
+		try {
+
+			res.json('Logout operation')
+		} catch (e) {
+			return next(ApiError.internal('Unforseen error during logout'))
+		}
+	}
+
+	async refresh(req, res, next) {
+		try {
+
+			res.json('Refresh token operation')
+		} catch (e) {
+			return next(ApiError.internal('Unforseen error during refresh'))
+		}
+	}
+
 
 	async check(req, res, next) {
 		const {id} = req.query

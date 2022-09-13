@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const ApiError = require('../errors/ApiError')
 const { Role, User } = require('../models/models')
-const tokenService = require('./tokenService');
+const { generateTokens, saveToken } = require('./tokenService');
 const { DEFAULT_ROLE } = require('../constants/authConstants');
 
 class AuthService {
@@ -35,7 +35,10 @@ class AuthService {
 			const hashPassword = await bcrypt.hash(password, 5)
 			const user = await User.create({email, name, password: hashPassword})
 			user.setRoles(roleIds)
-			const tokens = tokenService.generateTokens({email: user.email})
+			
+			const tokens = generateTokens({email: user.email})
+			await saveToken(next, user.id, tokens.refreshToken);
+
 			return {...tokens, user: this.userObj(user)}
 		} catch (e) {
 			return next(ApiError.wrongValue('Signup Error'))
