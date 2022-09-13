@@ -2,7 +2,8 @@ const {validationResult} = require('express-validator');
 const ApiError = require('../errors/ApiError');
 const { User } = require('../models/models');
 const { generateAccessToken } = require('../services/tokenService');
-const authService = require('../services/authService')
+const authService = require('../services/authService');
+const { COOKIE_MAX_AGE } = require('../constants/authConstants');
 
 class AuthController {
 	async signup(req, res, next) {
@@ -13,11 +14,11 @@ class AuthController {
 			}
 
 			let {name, email, password, roles} = req.body
-			const roleIds = await authService.getSignupRoleIds(roles, next)
-			const user = await authService.signup(name, email, password, roleIds, next)
-			
-			const token = generateAccessToken({email: user.email})
-			return res.json({token})
+			const {roleIds, roleNames} = await authService.getSignupRoleIds(roles, next)
+			let {accessToken, refreshToken, user} = await authService.signup(name, email, password, roleIds, next)
+			res.cookie('refreshToken', refreshToken, {maxAge: COOKIE_MAX_AGE, httpOnly: true})
+
+			return res.json({userData: {user: {...user, roles: roleNames}, accessToken}})
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during signup'))
 		}

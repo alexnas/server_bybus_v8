@@ -1,9 +1,18 @@
 const bcrypt = require('bcrypt');
 const ApiError = require('../errors/ApiError')
 const { Role, User } = require('../models/models')
-const { DEFAULT_ROLE } = require('../constants/authConstants')
+const tokenService = require('./tokenService');
+const { DEFAULT_ROLE } = require('../constants/authConstants');
 
 class AuthService {
+	userObj(user) {
+		return {
+			id: user.id, 
+			name: user.name, 
+			email: user.email, 
+		}
+	}
+
 	async getSignupRoleIds(requestRoles, next) {
 		try {
 			const defaultRole = await Role.findOne({where: {name: DEFAULT_ROLE}})
@@ -13,7 +22,9 @@ class AuthService {
 
 			const allRoles = await Role.findAll()
 			const roles = requestRoles ? JSON.parse(requestRoles) : [DEFAULT_ROLE]
-			return allRoles.filter(role => roles.includes(role.name)).map(role => +role.id)
+			const roleIds = allRoles.filter(role => roles.includes(role.name)).map(role => +role.id)
+			const roleNames = allRoles.filter(role => roles.includes(role.name)).map(role => role.name)
+			return {roleIds, roleNames}
 		} catch (e) {
 			return next(ApiError.wrongValue('Signup Error'))
 		}
@@ -24,7 +35,8 @@ class AuthService {
 			const hashPassword = await bcrypt.hash(password, 5)
 			const user = await User.create({email, name, password: hashPassword})
 			user.setRoles(roleIds)
-			return user
+			const tokens = tokenService.generateTokens({email: user.email})
+			return {...tokens, user: this.userObj(user)}
 		} catch (e) {
 			return next(ApiError.wrongValue('Signup Error'))
 		}
