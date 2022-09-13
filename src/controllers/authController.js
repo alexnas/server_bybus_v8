@@ -1,8 +1,10 @@
+const bcrypt = require('bcrypt');
 const {validationResult} = require('express-validator');
 const ApiError = require('../errors/ApiError');
 const { User } = require('../models/models');
-const { generateAccessToken } = require('../services/tokenService');
+const { generateTokens } = require('../services/tokenService');
 const authService = require('../services/authService');
+const { userObj } = require('../services/authService');
 const { COOKIE_MAX_AGE } = require('../constants/authConstants');
 
 class AuthController {
@@ -37,22 +39,20 @@ class AuthController {
 				return next(ApiError.forbidden('Authentication failed'))
 			}
 
-			const token = generateAccessToken({email})
+			const {accessToken} = generateTokens({email: user.email})
 			const userRoles = await user.getRoles()
 			const roles = userRoles.map(role => role.name)
+			const userObject = userObj(user)
 
 			return res.json({
-				id: user.id, 
-				name: user.name, 
-				email: user.email, 
-				roles, 
-				accessToken: token
+				userData: {
+					user: {...userObject, roles},
+					accessToken
+				}
 			})			
 		} catch (e) {
-			
+			return next(ApiError.internal('Unforseen error during login'))
 		}
-
-
 	}
 
 	async check(req, res, next) {
