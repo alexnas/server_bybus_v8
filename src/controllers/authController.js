@@ -48,8 +48,11 @@ class AuthController {
 
 	async logout(req, res, next) {
 		try {
-
-			res.json('Logout operation')
+			const {refreshToken} = req.cookies
+			const token = await authService.logoutService(refreshToken, next)
+			res.clearCookie('refreshToken')
+			
+			res.json(token)
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during logout'))
 		}

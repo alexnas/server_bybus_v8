@@ -29,6 +29,20 @@ class TokenService {
 			return next(ApiError.wrongValue('RefreshToken Error'))
 		}
 	}
+
+	async removeToken(refreshToken, next) {
+		try {
+			const tokenToRemove = await RefreshToken.findOne({where: {tokenValue: refreshToken}})
+			if (!tokenToRemove) {
+				return next(ApiError.badRequest('There is no such token registered'))
+			}
+			const tokenData = await tokenToRemove.destroy()
+
+			return {message: 'RefreshToken is removed successfully'}
+		} catch (e) {
+			return next(ApiError.wrongValue('RemoveToken Error'))
+		}
+	}
 }
 
 module.exports = new TokenService();

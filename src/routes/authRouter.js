@@ -12,7 +12,7 @@ router.post('/signup',
 	authController.signup
 )
 router.post('/login', authController.login)
-router.get('/logout', authController.logout)
+router.post('/logout', authController.logout)
 router.get('/refresh', authController.refresh)
 router.get('/auth', authController.check)
 

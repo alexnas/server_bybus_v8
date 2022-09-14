@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const ApiError = require('../errors/ApiError')
 const { Role, User } = require('../models/models')
-const { generateTokens, saveToken } = require('./tokenService');
+const { generateTokens, saveToken, removeToken } = require('./tokenService');
 const { DEFAULT_ROLE } = require('../constants/authConstants');
 
 class AuthService {
@@ -72,6 +72,11 @@ class AuthService {
 		} catch (e) {
 			return next(ApiError.wrongValue('Login Error'))
 		}
+	}
+
+	async logoutService(refreshToken, next) {
+		const token = await removeToken(refreshToken, next)
+		return token
 	}
 }
 
