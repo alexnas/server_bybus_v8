@@ -30,18 +30,47 @@ class AuthService {
 		}
 	}
 
-	async signup(name, email, password, roleIds, next) {
+	async signupService(name, email, password, roleIds, next) {
 		try {
 			const hashPassword = await bcrypt.hash(password, 5)
 			const user = await User.create({email, name, password: hashPassword})
-			user.setRoles(roleIds)
+			await user.setRoles(roleIds)
+			
+			const userRoles = await user.getRoles()
+			const roles = userRoles.map(role => role.name)
+			const userObj = {...this.userObj(user), roles}
 			
 			const tokens = generateTokens({email: user.email})
 			await saveToken(next, user.id, tokens.refreshToken);
 
-			return {...tokens, user: this.userObj(user)}
+			return {...tokens, user: userObj}
 		} catch (e) {
 			return next(ApiError.wrongValue('Signup Error'))
+		}
+	}
+
+	async loginService(email, password, next) {
+		try {
+			const user = await User.findOne({where: {email}})
+			if (!user) {
+				return next(ApiError.forbidden('The user with this email was not found'))
+			}
+
+			let comparePasswords = bcrypt.compareSync(password, user.password)
+			if(!comparePasswords) {
+				return next(ApiError.forbidden('Authentication failed'))
+			}
+
+			const userRoles = await user.getRoles()
+			const roles = userRoles.map(role => role.name)
+			const userObj = {...this.userObj(user), roles}
+			
+			const tokens = generateTokens({email: user.email})
+			await saveToken(next, userObj.id, tokens.refreshToken);
+			
+			return {...tokens, user: userObj}
+		} catch (e) {
+			return next(ApiError.wrongValue('Login Error'))
 		}
 	}
 }

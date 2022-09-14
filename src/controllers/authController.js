@@ -1,10 +1,6 @@
-const bcrypt = require('bcrypt');
 const {validationResult} = require('express-validator');
 const ApiError = require('../errors/ApiError');
-const { User } = require('../models/models');
-const { generateTokens, saveToken } = require('../services/tokenService');
 const authService = require('../services/authService');
-const { userObj } = require('../services/authService');
 const { COOKIE_MAX_AGE } = require('../constants/authConstants');
 
 class AuthController {
@@ -17,10 +13,16 @@ class AuthController {
 
 			let {name, email, password, roles} = req.body
 			const {roleIds, roleNames} = await authService.getSignupRoleIds(roles, next)
-			let {accessToken, refreshToken, user} = await authService.signup(name, email, password, roleIds, next)
+			let {accessToken, refreshToken, user} = await authService.signupService(name, email, password, roleIds, next)
 			res.cookie('refreshToken', refreshToken, {maxAge: COOKIE_MAX_AGE, httpOnly: true})
 
-			return res.json({userData: {user: {...user, roles: roleNames}, accessToken}})
+			return res.json({
+				userData: {
+					user,
+					accessToken,
+					refreshToken
+				}
+			})
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during signup'))
 		}
@@ -29,27 +31,14 @@ class AuthController {
 	async login(req, res, next) {
 		try {
 			const {email, password} = req.body
-			const user = await User.findOne({where: {email}})
-			if (!user) {
-				return next(ApiError.forbidden('The user with this email was not found'))
-			}
-
-			let comparePasswords = bcrypt.compareSync(password, user.password)
-			if(!comparePasswords) {
-				return next(ApiError.forbidden('Authentication failed'))
-			}
-
-			const {accessToken, refreshToken} = generateTokens({email: user.email})
-			const userRoles = await user.getRoles()
-			const roles = userRoles.map(role => role.name)
-			const userObject = userObj(user)
-
-			await saveToken(next, userObject.id, refreshToken);
+			let {accessToken, refreshToken, user} = await authService.loginService(email, password, next) 
+			res.cookie('refreshToken', refreshToken, {maxAge: COOKIE_MAX_AGE, httpOnly: true})
 
 			return res.json({
 				userData: {
-					user: {...userObject, roles},
-					accessToken
+					user,
+					accessToken,
+					refreshToken
 				}
 			})			
 		} catch (e) {
