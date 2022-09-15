@@ -1,8 +1,9 @@
 const bcrypt = require('bcrypt');
 const ApiError = require('../errors/ApiError')
-const { Role, User } = require('../models/models')
+const { Role, User, RefreshToken } = require('../models/models')
 const { generateTokens, saveToken, removeToken } = require('./tokenService');
 const { DEFAULT_ROLE } = require('../constants/authConstants');
+const tokenService = require('./tokenService');
 
 class AuthService {
 	userObj(user) {
@@ -77,6 +78,32 @@ class AuthService {
 	async logoutService(refreshToken, next) {
 		const token = await removeToken(refreshToken, next)
 		return token
+	}
+
+	async refreshService(refreshToken, next) {
+		try {
+			if (!refreshToken) {
+				return next(ApiError.unAuthorized('Authorization Error'))
+			}
+			const userData = tokenService.validateRefreshToken(refreshToken)
+			const tokenFromDb = await tokenService.findToken(refreshToken, next)
+			if (!userData || !tokenFromDb) {
+				return next(ApiError.unAuthorized('Authorization Error'))
+			}
+
+			const user = await User.findOne({where: {email: userData.email}})
+
+			const userRoles = await user.getRoles()
+			const roles = userRoles.map(role => role.name)
+			const userObj = {...this.userObj(user), roles}
+			
+			const tokens = generateTokens({email: user.email})
+			await saveToken(next, userObj.id, tokens.refreshToken);
+
+			return {...tokens, user: userObj}
+		} catch (e) {
+			return next(ApiError.internal('Unforseen error in refresh service'))
+		}
 	}
 }
 

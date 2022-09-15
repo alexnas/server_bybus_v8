@@ -19,7 +19,7 @@ class TokenService {
 		try {
 			const tokenData = await RefreshToken.findOne({where: {userId}})
 			if (tokenData) {
-				tokenData.update({ userId, tokenValue: refreshToken })
+				await tokenData.update({ tokenValue: refreshToken })
 				return {refreshToken: tokenData.tokenValue}
 			}
 
@@ -41,6 +41,33 @@ class TokenService {
 			return {message: 'RefreshToken is removed successfully'}
 		} catch (e) {
 			return next(ApiError.wrongValue('RemoveToken Error'))
+		}
+	}
+	
+	validateAccessToken(token) {
+		try {
+			const userData = jwt.verify(token, accessToken_secret)
+			return userData
+		} catch (e) {
+			return null
+		}
+	}
+
+	validateRefreshToken(token) {
+			try {
+					const userData = jwt.verify(token, refreshToken_secret);
+					return userData;
+			} catch (e) {
+					return null;
+			}
+	}
+
+	async findToken(refreshToken, next) {
+		try {
+			const tokenData = await RefreshToken.findOne({where: {tokenValue: refreshToken}})
+			return tokenData
+		} catch (e) {
+			return next(ApiError.unAuthorized('Authorization Error'))
 		}
 	}
 }

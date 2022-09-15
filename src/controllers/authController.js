@@ -60,8 +60,17 @@ class AuthController {
 
 	async refresh(req, res, next) {
 		try {
+			const { refreshToken } = req.cookies
+			let {accessToken, refreshToken: newRefreshToken, user} = await authService.refreshService(refreshToken, next) 
+			res.cookie('refreshToken', newRefreshToken, {maxAge: COOKIE_MAX_AGE, httpOnly: true})
 
-			res.json('Refresh token operation')
+			return res.json({
+				userData: {
+					user,
+					accessToken,
+					refreshToken: newRefreshToken
+				}
+			})			
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during refresh'))
 		}
