@@ -1,7 +1,7 @@
 const {validationResult} = require('express-validator');
 const ApiError = require('../errors/ApiError');
 const authService = require('../services/authService');
-const { COOKIE_MAX_AGE } = require('../constants/authConstants');
+const tokenService = require('../services/tokenService');
 
 class AuthController {
 	async signup(req, res, next) {
@@ -12,17 +12,11 @@ class AuthController {
 			}
 
 			let {name, email, password, roles} = req.body
-			const {roleIds, roleNames} = await authService.getSignupRoleIds(roles, next)
-			let {accessToken, refreshToken, user} = await authService.signupService(name, email, password, roleIds, next)
-			res.cookie('refreshToken', refreshToken, {maxAge: COOKIE_MAX_AGE, httpOnly: true})
+			const {roleIds} = await authService.getSignupRoleIds(roles, next)
+			let userData = await authService.signupService(name, email, password, roleIds, next)
+			tokenService.setCookieToken(res, userData.refreshToken)
 
-			return res.json({
-				userData: {
-					user,
-					accessToken,
-					refreshToken
-				}
-			})
+			return res.json({userData})
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during signup'))
 		}
@@ -31,16 +25,10 @@ class AuthController {
 	async login(req, res, next) {
 		try {
 			const {email, password} = req.body
-			let {accessToken, refreshToken, user} = await authService.loginService(email, password, next) 
-			res.cookie('refreshToken', refreshToken, {maxAge: COOKIE_MAX_AGE, httpOnly: true})
+			let userData = await authService.loginService(email, password, next) 
+			tokenService.setCookieToken(res, userData.refreshToken)
 
-			return res.json({
-				userData: {
-					user,
-					accessToken,
-					refreshToken
-				}
-			})			
+			return res.json({userData})			
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during login'))
 		}
@@ -50,7 +38,7 @@ class AuthController {
 		try {
 			const {refreshToken} = req.cookies
 			const token = await authService.logoutService(refreshToken, next)
-			res.clearCookie('refreshToken')
+			tokenService.clearCookieToken(res)
 			
 			res.json(token)
 		} catch (e) {
@@ -61,16 +49,10 @@ class AuthController {
 	async refresh(req, res, next) {
 		try {
 			const { refreshToken } = req.cookies
-			let {accessToken, refreshToken: newRefreshToken, user} = await authService.refreshService(refreshToken, next) 
-			res.cookie('refreshToken', newRefreshToken, {maxAge: COOKIE_MAX_AGE, httpOnly: true})
+			let userData = await authService.refreshService(refreshToken, next) 
+			tokenService.setCookieToken(res, userData.refreshToken)
 
-			return res.json({
-				userData: {
-					user,
-					accessToken,
-					refreshToken: newRefreshToken
-				}
-			})			
+			return res.json({userData})			
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during refresh'))
 		}

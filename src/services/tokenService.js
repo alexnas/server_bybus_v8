@@ -2,8 +2,7 @@ const jwt = require('jsonwebtoken');
 const {accessToken_secret, refreshToken_secret} = require('../config/auth.config');
 const ApiError = require('../errors/ApiError');
 const { RefreshToken } = require('../models/models')
-
-const { ACCESS_TIMEOUT, REFRESH_TIMEOUT } = require('../constants/authConstants');
+const { ACCESS_TIMEOUT, REFRESH_TIMEOUT, COOKIE_MAX_AGE } = require('../constants/authConstants');
 
 class TokenService {
 	generateTokens(payload) {
@@ -69,6 +68,14 @@ class TokenService {
 		} catch (e) {
 			return next(ApiError.unAuthorized('Authorization Error'))
 		}
+	}
+	
+	setCookieToken(res, refreshToken) {
+		res.cookie('refreshToken', refreshToken, {maxAge: COOKIE_MAX_AGE, httpOnly: true})
+	}
+	
+	clearCookieToken(res) {
+		res.clearCookie('refreshToken')
 	}
 }
 
