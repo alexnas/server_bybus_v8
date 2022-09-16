@@ -1,21 +1,31 @@
 const ApiError = require('../errors/ApiError')
+const userService = require('../services/userService')
 
 class UserController {
-	async register(req, res) {
-
-	}
-
-	async login(req, res) {
-
-	}
-
-	async check(req, res, next) {
-		const {id} = req.query
-		if (!id) {
-			return next(ApiError.wrongValue('ID is not defined'))
+	async getUsers(req, res, next) {
+		try {
+			const users = await userService.getAllUsers()
+			res.json(users)
+		} catch (e) {
+			return next(e)
 		}
-		res.status(200).json({message: `ID = ${id}`})
-	}	
+	}
+
+	async allAccess(req, res, next) {
+  	res.status(200).json("Public Content.");
+	}
+
+	async userBoard(req, res, next) {
+  	res.status(200).json("User Content.");
+	}
+
+	async adminBoard(req, res, next) {
+  	res.status(200).json("Admin Content.");
+	}
+
+	async moderatorBoard(req, res, next) {
+  	res.status(200).json("Moderator Content.");
+	}
 }
 
 module.exports = new UserController()
