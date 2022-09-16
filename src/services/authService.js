@@ -5,14 +5,6 @@ const tokenService = require('./tokenService');
 const { DEFAULT_ROLE } = require('../constants/authConstants');
 
 class AuthService {
-	userObj(user) {
-		return {
-			id: user.id, 
-			name: user.name, 
-			email: user.email, 
-		}
-	}
-
 	async getSignupRoleIds(requestRoles, next) {
 		try {
 			const defaultRole = await Role.findOne({where: {name: DEFAULT_ROLE}})
@@ -36,9 +28,7 @@ class AuthService {
 			const user = await User.create({email, name, password: hashPassword})
 			await user.setRoles(roleIds)
 			
-			const userRoles = await user.getRoles()
-			const roles = userRoles.map(role => role.name)
-			const userObj = {...this.userObj(user), roles}
+			const userObj = await this.getUserObjWithRoles(user, next)
 			
 			const tokens = tokenService.generateTokens({email: user.email})
 			await tokenService.saveToken(next, user.id, tokens.refreshToken);
@@ -61,9 +51,7 @@ class AuthService {
 				return next(ApiError.forbidden('Authentication failed'))
 			}
 
-			const userRoles = await user.getRoles()
-			const roles = userRoles.map(role => role.name)
-			const userObj = {...this.userObj(user), roles}
+			const userObj = await this.getUserObjWithRoles(user, next)
 			
 			const tokens = tokenService.generateTokens({email: user.email})
 			await tokenService.saveToken(next, user.id, tokens.refreshToken);
@@ -79,23 +67,43 @@ class AuthService {
 		return token
 	}
 
+	async getUserRoles(user, next) {
+		try {
+			const userRoles = await user.getRoles()
+			return  userRoles.map(role => role.name)
+		} catch (e) {
+				return next(ApiError.wrongValue('Get UserRoles Error'))
+		}
+	}
+
+	async getUserObjWithRoles(user, next) {
+		try {
+			const roles = await this.getUserRoles(user, next)
+			return  {
+				id: user.id, 
+				name: user.name, 
+				email: user.email, 
+				roles
+			}
+		} catch (e) {
+				return next(ApiError.wrongValue('User Roles Error'))
+		}
+	}
+
 	async refreshService(refreshToken, next) {
 		try {
 			if (!refreshToken) {
 				return next(ApiError.unAuthorized('User Is Not Authorized'))
 			}
-			const userData = tokenService.validateRefreshToken(refreshToken)
+			const tokenData = tokenService.validateRefreshToken(refreshToken)
 			const tokenFromDb = await tokenService.findToken(refreshToken, next)
-			if (!userData || !tokenFromDb) {
+			if (!tokenData || !tokenFromDb) {
 				return next(ApiError.unAuthorized('User Is Not Authorized'))
 			}
 
-			const user = await User.findOne({where: {email: userData.email}})
+			const user = await User.findOne({where: {email: tokenData.email}})
+			const userObj = await this.getUserObjWithRoles(user, next)
 
-			const userRoles = await user.getRoles()
-			const roles = userRoles.map(role => role.name)
-			const userObj = {...this.userObj(user), roles}
-			
 			const tokens = tokenService.generateTokens({email: user.email})
 			await tokenService.saveToken(next, user.id, tokens.refreshToken);
 
