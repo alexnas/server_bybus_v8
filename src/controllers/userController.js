@@ -9,7 +9,22 @@ class UserController {
 		} catch (e) {
 			return next(e)
 		}
+	}
 
+	async allAccess(req, res, next) {
+  	res.status(200).json("Public Content.");
+	}
+
+	async userBoard(req, res, next) {
+  	res.status(200).json("User Content.");
+	}
+
+	async adminBoard(req, res, next) {
+  	res.status(200).json("Admin Content.");
+	}
+
+	async moderatorBoard(req, res, next) {
+  	res.status(200).json("Moderator Content.");
 	}
 }
 
