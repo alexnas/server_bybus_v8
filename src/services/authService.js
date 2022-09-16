@@ -1,9 +1,8 @@
 const bcrypt = require('bcrypt');
 const ApiError = require('../errors/ApiError')
-const { Role, User, RefreshToken } = require('../models/models')
-const { generateTokens, saveToken, removeToken } = require('./tokenService');
-const { DEFAULT_ROLE } = require('../constants/authConstants');
+const { Role, User } = require('../models/models')
 const tokenService = require('./tokenService');
+const { DEFAULT_ROLE } = require('../constants/authConstants');
 
 class AuthService {
 	userObj(user) {
@@ -41,10 +40,10 @@ class AuthService {
 			const roles = userRoles.map(role => role.name)
 			const userObj = {...this.userObj(user), roles}
 			
-			const tokens = generateTokens({email: user.email})
-			await saveToken(next, user.id, tokens.refreshToken);
+			const tokens = tokenService.generateTokens({email: user.email})
+			await tokenService.saveToken(next, user.id, tokens.refreshToken);
 
-			return {...tokens, user: userObj}
+			return {user: userObj, ...tokens}
 		} catch (e) {
 			return next(ApiError.wrongValue('Signup Error'))
 		}
@@ -66,29 +65,29 @@ class AuthService {
 			const roles = userRoles.map(role => role.name)
 			const userObj = {...this.userObj(user), roles}
 			
-			const tokens = generateTokens({email: user.email})
-			await saveToken(next, userObj.id, tokens.refreshToken);
+			const tokens = tokenService.generateTokens({email: user.email})
+			await tokenService.saveToken(next, user.id, tokens.refreshToken);
 			
-			return {...tokens, user: userObj}
+			return {user: userObj, ...tokens}
 		} catch (e) {
 			return next(ApiError.wrongValue('Login Error'))
 		}
 	}
 
 	async logoutService(refreshToken, next) {
-		const token = await removeToken(refreshToken, next)
+		const token = await tokenService.removeToken(refreshToken, next)
 		return token
 	}
 
 	async refreshService(refreshToken, next) {
 		try {
 			if (!refreshToken) {
-				return next(ApiError.unAuthorized('Authorization Error'))
+				return next(ApiError.unAuthorized('User Is Not Authorized'))
 			}
 			const userData = tokenService.validateRefreshToken(refreshToken)
 			const tokenFromDb = await tokenService.findToken(refreshToken, next)
 			if (!userData || !tokenFromDb) {
-				return next(ApiError.unAuthorized('Authorization Error'))
+				return next(ApiError.unAuthorized('User Is Not Authorized'))
 			}
 
 			const user = await User.findOne({where: {email: userData.email}})
@@ -97,10 +96,10 @@ class AuthService {
 			const roles = userRoles.map(role => role.name)
 			const userObj = {...this.userObj(user), roles}
 			
-			const tokens = generateTokens({email: user.email})
-			await saveToken(next, userObj.id, tokens.refreshToken);
+			const tokens = tokenService.generateTokens({email: user.email})
+			await tokenService.saveToken(next, user.id, tokens.refreshToken);
 
-			return {...tokens, user: userObj}
+			return {user: userObj, ...tokens}
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error in refresh service'))
 		}
