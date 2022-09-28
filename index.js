@@ -14,9 +14,18 @@ const app = express()
 app.use(express.json())
 app.use(cookieParser())
 
-app.use(cors())
+// Enabling CORS for some specific origins only.
+let corsOptions = {
+    origin : ['http://localhost:5173', 'localhost:5173'],
+		optionsSuccessStatus: 200,
+		credentials: true
+}
+app.use(cors(corsOptions))
+
 app.use(express.urlencoded({ limit: '500kb', extended: true }));
 app.use(express.static(path.resolve(__dirname, 'static')))
+
+// // *!! Fileupload forces MESSAGE IN CONSOLE: "Express-file-upload: Request is not eligible for file upload!"
 app.use(fileUpload({
     debug: true,
     useTempFiles: true,
