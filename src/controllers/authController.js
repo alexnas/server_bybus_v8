@@ -28,7 +28,7 @@ class AuthController {
 			let userData = await authService.loginService(email, password, next) 
 			tokenService.setCookieToken(res, userData.refreshToken)
 
-			return res.json({userData})			
+			return res.json({user: userData.user, token: userData.accessToken})			
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during login'))
 		}
@@ -40,7 +40,7 @@ class AuthController {
 			const token = await authService.logoutService(refreshToken, next)
 			tokenService.clearCookieToken(res)
 			
-			res.json(token)
+			res.json({message: 'Logout is successful'})
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during logout'))
 		}
@@ -57,7 +57,6 @@ class AuthController {
 			return next(ApiError.internal('Unforseen error during refresh'))
 		}
 	}
-
 
 	async check(req, res, next) {
 		const {id} = req.query
