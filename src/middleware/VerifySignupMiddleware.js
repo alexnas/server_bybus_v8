@@ -15,7 +15,7 @@ const checkDuplicates = async (req, res, next) => {
 		// check email duplicates
 		const emailCandidate = await User.findOne({where: {email: req.body.email}})
 		if (emailCandidate) {
-			return next(ApiError.wrongValue(`Authentication failed`))
+			return next(ApiError.wrongValue(`This email is already used`))
 		}
 
 		next()

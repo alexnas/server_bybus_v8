@@ -16,7 +16,7 @@ class AuthController {
 			let userData = await authService.signupService(name, email, password, roleIds, next)
 			tokenService.setCookieToken(res, userData.refreshToken)
 
-			return res.json({userData})
+			return res.json({user: userData.user, token: userData.accessToken})
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during signup'))
 		}
@@ -40,7 +40,9 @@ class AuthController {
 			const token = await authService.logoutService(refreshToken, next)
 			tokenService.clearCookieToken(res)
 			
-			res.json({message: 'Logout is successful'})
+			res.status(200).json({
+				status: 'success'
+    });
 		} catch (e) {
 			return next(ApiError.internal('Unforseen error during logout'))
 		}
