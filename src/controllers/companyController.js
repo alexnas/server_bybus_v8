@@ -63,18 +63,23 @@ class CompanyController {
 			if (!company) {
 					return next(ApiError.badRequest('This company is not registered'))
 			}
+
+			const isCloudinaryUrl = company.logo.indexOf("res.cloudinary.com") !== -1
+			const isNewFile  = req.files && req.files.file
+			let logo = 'LOGO'
 			
 			// Destroy old image on Cloud File Server
-			if (req.files && req.files.file && company.logo) {
+			if (isNewFile && isCloudinaryUrl) {
 				const imageDestroyResponse = await destroyImageService(next, company.logo)
 				console.log('====================== imageDestroyResponse__OUTSIDE =========', imageDestroyResponse);
 			}
 
 			// Upload new image file into Cloud File Server
-			let logo = 'LOGO'
-			if (req.files && req.files.file) {
+			if (isNewFile) {
 				let {url} = await uploadImageService(next, req.files.file)
 				logo = url
+			} else if (!isNewFile && isCloudinaryUrl) {
+				logo = company.logo
 			}
 
 			await company.update({name, fullname, logo, rating, description})
