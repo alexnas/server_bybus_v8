@@ -56,6 +56,12 @@ class RouteController {
 			return next(ApiError.internal('Unforseen server error'))
 		}
   }
+
+  async getAll(req, res) {
+    const busRoutes = await Route.findAll();
+    return res.json(busRoutes);
+  }	
+
 }
 
 module.exports = new RouteController()
