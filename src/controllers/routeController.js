@@ -75,6 +75,60 @@ class RouteController {
 		}
 	}
 
+	async update(req, res, next) {
+		const {id} = req.params
+		const {
+				start_time,
+				end_time,
+				price,
+				distance,
+				description,
+				startCityId,
+				endCityId,
+				companyId,
+		} = req.body
+
+		const routeDataToUpdate = {}
+
+		try {
+			const route = await Route.findOne({where: {id}})
+			if (!route) {
+				return next(ApiError.badRequest('There is no such route registered'))
+			}
+
+			const startCity = await City.findOne({where: {id: startCityId || route.startCityId}})
+			if (!startCity) {
+				return next(ApiError.badRequest('This route startCity is not registered'))
+			}
+
+			const endCity = await City.findOne({where: {id: endCityId || route.endCityId}})
+			if (!endCity) {
+				return next(ApiError.badRequest('This route endCity is not registered'))
+			}
+
+			const company = await Company.findOne({where: {id: companyId}})
+			if (!company) {
+				return next(ApiError.badRequest('This route company is not registered'))
+			}
+			
+			const name = `${startCity.name}-${endCity.name}`
+
+			await route.update({
+				name,
+				start_time,
+				end_time,
+				price,
+				distance,
+				description,
+				startCityId,
+				endCityId,
+				companyId,
+		})
+			res.json(route);
+		} catch (e) {
+			return next(ApiError.internal('Server error'))
+		}
+	}
 
 	async delete(req, res, next) {
 		const {id} = req.params
