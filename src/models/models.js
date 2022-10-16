@@ -56,10 +56,6 @@ const Route = sequelize.define('route', {
   description: { type: DataTypes.STRING },
 });
 
-const RouteStartcity = sequelize.define('route_startcity')
-
-const RouteEndcity = sequelize.define('route_endcity')
-
 const City = sequelize.define('city', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   name: { type: DataTypes.STRING, unique: true, allowNull: false },
@@ -139,53 +135,19 @@ User.belongsToMany(Role, {
   otherKey: "roleId"
 });
 
-Route.belongsToMany(City, {
-	through: "route_startcity",
-	foreignKey: "routeId",
-	otherKey: "cityId",
+City.hasMany(Route, {
+  foreignKey: 'startCityId',
+});
+Route.belongsTo(City, {
+  foreignKey: 'startCityId',
 });
 
-City.belongsToMany(Route, {
-	through: "route_startcity",
-	foreignKey: "cityId",
-	otherKey: "routeId",
-})
-
-Route.belongsToMany(City, {
-	through: "route_startcity",
-	foreignKey: "routeId",
-	otherKey: "cityId",
+City.hasMany(Route, {
+  foreignKey: 'endCityId',
 });
-
-City.belongsToMany(Route, {
-	through: "route_startcity",
-	foreignKey: "cityId",
-	otherKey: "routeId",
-})
-
-Route.belongsToMany(City, {
-	through: "route_endcity",
-	foreignKey: "routeId",
-	otherKey: "cityId",
+Route.belongsTo(City, {
+  foreignKey: 'endCityId',
 });
-
-City.belongsToMany(Route, {
-	through: "route_endcity",
-	foreignKey: "cityId",
-	otherKey: "routeId",
-})
-
-Route.belongsToMany(City, {
-	through: "route_endcity",
-	foreignKey: "routeId",
-	otherKey: "cityId",
-});
-
-City.belongsToMany(Route, {
-	through: "route_endcity",
-	foreignKey: "cityId",
-	otherKey: "routeId",
-})
 
 User.hasMany(Comment);
 Comment.belongsTo(User);
@@ -259,8 +221,6 @@ module.exports = {
   Route,
   City,
   Province,
-	RouteStartcity,
-	RouteEndcity,
   ViaCity,
   BusStop,
   StopType,

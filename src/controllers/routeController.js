@@ -1,52 +1,60 @@
 const { Op } = require('sequelize');
 const ApiError = require('../errors/ApiError');
 const {
-  Route,
-  StartCity,
-  EndCity,
-  City,
-  Province,
-  Company,
+  Route, 
+	Company, 
+	City,
 } = require('../models/models');
-const {create: StartCityCreate} = require('./startCityController')
-const {create: EndCityCreate} = require('./endCityController')
 
 
 class RouteController {
 	  async create(req, res, next) {
-    const {
-      name,
-      start_time,
-      end_time,
-      price,
-      distance,
-      description,
-      startcityId,
-      endcityId,
-      companyId,
-    } = req.body;
+		try {
+			let {
+				name,
+				start_time,
+				end_time,
+				price,
+				distance,
+				description,
+				startCityId,
+				endCityId,
+				companyId,
+			} = req.body;
 
-    const busRoute = await Route.create({
-      name,
-      start_time,
-      end_time,
-      price,
-      distance,
-      description,
-      companyId,
-    });
+			const startCity = await City.findOne({where: {id: startCityId}})
+			if (!startCity) {
+				return next(ApiError.badRequest('This route startCity is not registered'))
+			}
 
-		const startCityCreated = await StartCityCreate(startcityId, busRoute.id, next)
-		if(!startCityCreated) {
-			return next(ApiError.wrongValue('StartCity is not defined'))
+			const endCity = await City.findOne({where: {id: endCityId}})
+			if (!endCity) {
+				return next(ApiError.badRequest('This route endCity is not registered'))
+			}
+
+			const company = await Company.findOne({where: {id: companyId}})
+			if (!company) {
+				return next(ApiError.badRequest('This route company is not registered'))
+			}
+			
+			const busRoute = await Route.create({
+				name,
+				start_time,
+				end_time,
+				price,
+				distance,
+				description,
+				startCityId,
+				endCityId,
+				companyId,
+			});
+
+			return res.json({...busRoute.dataValues, name: `${startCity.name}-${endCity.name}`, startCity, endCity, company});
+
+			return res.json(busRoute);
+		} catch (e) {
+			return next(ApiError.internal('Unforseen server error'))
 		}
-
-		const endCityCreated = await EndCityCreate(endcityId, busRoute.id, next)
-		if(!endCityCreated) {
-			return next(ApiError.wrongValue('EndCity is not defined'))
-		}
-
-    return res.json({...busRoute.dataValues, name: `${startCityCreated.name}-${endCityCreated.name}`, startCity: startCityCreated, endCity: endCityCreated});
   }
 }
 
