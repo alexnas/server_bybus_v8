@@ -62,6 +62,20 @@ class RouteController {
     return res.json(busRoutes);
   }	
 
+	async getOne(req, res, next) {
+		const {id} = req.params
+		try {
+			const route = await Route.findOne({where: {id}})
+			if (!route) {
+				return next(ApiError.badRequest('This route is not registered'))
+			}
+			res.json(route)
+		} catch (e) {
+			return next(ApiError.internal('Server error'))
+		}
+	}
+
+
 	async delete(req, res, next) {
 		const {id} = req.params
 		try {
