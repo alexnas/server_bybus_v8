@@ -4,6 +4,7 @@ const {
   Route, 
 	Company, 
 	City,
+	Province,
 } = require('../models/models');
 
 
@@ -36,9 +37,9 @@ class RouteController {
 			if (!company) {
 				return next(ApiError.badRequest('This route company is not registered'))
 			}
-			
+
 			const busRoute = await Route.create({
-				name,
+				name: `${startCity.name}-${endCity.name}`,
 				start_time,
 				end_time,
 				price,
@@ -49,7 +50,7 @@ class RouteController {
 				companyId,
 			});
 
-			return res.json({...busRoute.dataValues, name: `${startCity.name}-${endCity.name}`, startCity, endCity, company});
+			return res.json({...busRoute.dataValues, startCity, endCity, company});
 
 			return res.json(busRoute);
 		} catch (e) {
@@ -57,9 +58,47 @@ class RouteController {
 		}
   }
 
-  async getAll(req, res) {
-    const busRoutes = await Route.findAll();
-    return res.json(busRoutes);
+  async getAll(req, res, next) {
+    // const { start_city, end_city, company_name } = req.query;
+    const { start_city, end_city, company_name } = req.body;
+		try {
+			const whereStatement = {}
+			const startCityCandidate = start_city && await City.findOne({where: {name: start_city}})
+			const endCityCandidate = end_city && await City.findOne({where: {name: end_city}})
+
+			if (start_city && startCityCandidate) {
+				whereStatement.startCityId = startCityCandidate.id;
+			}
+			if (end_city && endCityCandidate) {
+				whereStatement.endCityId = endCityCandidate.id;
+			}
+			if (company_name) {
+				whereStatement['$company.name$'] = { [Op.iLike]: company_name };
+			}
+			
+			const busRoutes = await Route.findAll({
+				where: whereStatement,
+				include: [
+					{
+						model: Company,
+					},
+					{
+						model: City,
+						required: true,
+						include: [
+							{
+								model: Province,
+							},
+						],
+					},
+				]
+			});
+
+			return res.json(busRoutes);
+		} catch (e) {
+			console.log(e)
+			return next(ApiError.internal('Unforseen server error'))
+		}
   }	
 
 	async getOne(req, res, next) {
