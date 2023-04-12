@@ -72,7 +72,7 @@ class CompanyController {
       }
 
       const isCloudinaryUrl = company.logo.indexOf('res.cloudinary.com') !== -1;
-      const isNewFile = req.files && req.files.file;
+      const isNewFile = req.files && req.files[0];
       let logo = 'LOGO';
 
       // Destroy old image on Cloud File Server
@@ -83,7 +83,7 @@ class CompanyController {
 
       // Upload new image file into Cloud File Server
       if (isNewFile) {
-        let { url } = await uploadImageService(next, req.files.file);
+        let { url } = await uploadImageService(next, req.files[0]);
         logo = url;
       } else if (!isNewFile && isCloudinaryUrl) {
         logo = company.logo;
