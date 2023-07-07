@@ -20,7 +20,7 @@ class CityController {
       if (!choosenProvince) provinceId = null;
 
       const city = await City.create({ name, description, provinceId });
-      res.json({ city });
+      res.json(city);
     } catch (e) {
       return next(ApiError.internal('Server error'));
     }
