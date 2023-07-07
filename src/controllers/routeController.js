@@ -5,7 +5,20 @@ const { Route, Company, City, Province } = require('../models/models');
 class RouteController {
   async create(req, res, next) {
     try {
-      let { name, start_time, end_time, price, distance, description, startCityId, endCityId, companyId } = req.body;
+      let { name, start_time, end_time, price, distance, description, startCityId, endCityId, viaCityId, companyId } = req.body;
+
+      console.log('req ==================== ', {
+        name,
+        start_time,
+        end_time,
+        price,
+        distance,
+        description,
+        startCityId,
+        endCityId,
+        viaCityId,
+        companyId,
+      });
 
       const startCity = await City.findOne({ where: { id: startCityId } });
       if (!startCity) {
@@ -17,13 +30,21 @@ class RouteController {
         return next(ApiError.badRequest('This route endCity is not registered'));
       }
 
+      const viaCity = await City.findOne({ where: { id: viaCityId } });
+      if (!viaCity) {
+        return next(ApiError.badRequest('This route viaCity is not registered'));
+      }
+
       const company = await Company.findOne({ where: { id: companyId } });
       if (!company) {
         return next(ApiError.badRequest('This route company is not registered'));
       }
 
+      console.log('before Create', startCity, endCity, viaCity, company);
+
       const busRoute = await Route.create({
-        name: `${startCity.name}-${endCity.name}`,
+        // name: `${startCity.name}-${endCity.name}`,
+        name,
         start_time,
         end_time,
         price,
@@ -31,10 +52,11 @@ class RouteController {
         description,
         startCityId,
         endCityId,
+        viaCityId,
         companyId,
       });
 
-      return res.json({ ...busRoute.dataValues, startCity, endCity, company });
+      return res.json({ ...busRoute.dataValues, startCity, endCity, viaCity, company });
 
       return res.json(busRoute);
     } catch (e) {
@@ -45,6 +67,9 @@ class RouteController {
   async getAll(req, res, next) {
     // const { start_city, end_city, company_name } = req.query;
     const { start_city, end_city, company_name } = req.body;
+
+    console.log('start_city, end_city, company_name =============', start_city, end_city, company_name);
+
     try {
       const whereStatement = {};
       const startCityCandidate = start_city && (await City.findOne({ where: { name: start_city } }));
@@ -100,7 +125,16 @@ class RouteController {
 
   async update(req, res, next) {
     const { id } = req.params;
-    const { start_time, end_time, price, distance, description, startCityId, endCityId, companyId } = req.body;
+    const { name, start_time, end_time, price, distance, description, startCityId, endCityId, viaCityId, companyId } = req.body;
+    // let newViaCityId = viaCityId;
+    // if (!viaCityId) {
+    //   console.log('UPDATE =========', '>>>>>>> no viaCityId');
+    //   newViaCityId = -1;
+    // }
+    // console.log('UPDATE =========', startCityId);
+    // console.log('UPDATE =========', endCityId);
+    // console.log('UPDATE =========', viaCityId);
+    // console.log('UPDATE =========', companyId);
 
     const routeDataToUpdate = {};
 
@@ -125,7 +159,20 @@ class RouteController {
         return next(ApiError.badRequest('This route company is not registered'));
       }
 
-      const name = `${startCity.name}-${endCity.name}`;
+      // const name = `${startCity.name}-${endCity.name}`;
+
+      console.log('routeUpdate ===================', {
+        name,
+        start_time,
+        end_time,
+        price,
+        distance,
+        description,
+        startCityId,
+        endCityId,
+        viaCityId,
+        companyId,
+      });
 
       await route.update({
         name,
@@ -136,6 +183,7 @@ class RouteController {
         description,
         startCityId,
         endCityId,
+        viaCityId,
         companyId,
       });
       res.json(route);

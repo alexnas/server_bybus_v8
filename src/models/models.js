@@ -50,6 +50,7 @@ const CompanyRating = sequelize.define('company_rating', {
 const Route = sequelize.define('route', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   name: { type: DataTypes.STRING, allowNull: false },
+  useViaCity: { type: DataTypes.BOOLEAN, default: true },
   start_time: { type: DataTypes.TIME },
   end_time: { type: DataTypes.TIME },
   price: { type: DataTypes.DECIMAL(10, 2) },
@@ -69,9 +70,9 @@ const Province = sequelize.define('province', {
   description: { type: DataTypes.STRING },
 });
 
-const ViaCity = sequelize.define('via_city', {
-  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-});
+// const ViaCity = sequelize.define('via_city', {
+//   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+// });
 
 const BusStop = sequelize.define('bus_stop', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -125,15 +126,22 @@ const ROLES = ['user', 'admin', 'moderator'];
 User.hasOne(RefreshToken);
 RefreshToken.belongsTo(User, { foreignKey: 'userId' });
 
-Role.belongsToMany(User, {
-  through: 'user_role',
+// Role.belongsToMany(User, {
+//   through: 'user_role',
+//   foreignKey: 'roleId',
+//   otherKey: 'userId',
+// });
+// User.belongsToMany(Role, {
+//   through: 'user_role',
+//   foreignKey: 'userId',
+//   otherKey: 'roleId',
+// });
+
+Role.hasMany(User, {
   foreignKey: 'roleId',
-  otherKey: 'userId',
 });
-User.belongsToMany(Role, {
-  through: 'user_role',
-  foreignKey: 'userId',
-  otherKey: 'roleId',
+User.belongsTo(Role, {
+  foreignKey: 'roleId',
 });
 
 City.hasMany(Route, {
@@ -148,6 +156,13 @@ City.hasMany(Route, {
 });
 Route.belongsTo(City, {
   foreignKey: 'endCityId',
+});
+
+City.hasMany(Route, {
+  foreignKey: 'viaCityId',
+});
+Route.belongsTo(City, {
+  foreignKey: 'viaCityId',
 });
 
 User.hasMany(Comment);
@@ -175,8 +190,8 @@ City.belongsTo(Province, {
   foreignKey: 'provinceId',
 });
 
-City.hasMany(ViaCity);
-ViaCity.belongsTo(City);
+// City.hasMany(ViaCity);
+// ViaCity.belongsTo(City);
 
 City.hasMany(BusStop);
 BusStop.belongsTo(City);
@@ -196,8 +211,8 @@ Route.belongsTo(StartTerminal);
 EndTerminal.hasMany(Route);
 Route.belongsTo(EndTerminal);
 
-ViaCity.hasMany(Route);
-Route.belongsTo(ViaCity);
+// ViaCity.hasMany(Route);
+// Route.belongsTo(ViaCity);
 
 BusInfo.hasMany(Route);
 Route.belongsTo(BusInfo);
@@ -222,7 +237,7 @@ module.exports = {
   Route,
   City,
   Province,
-  ViaCity,
+  // ViaCity,
   BusStop,
   StopType,
   StartTerminal,
