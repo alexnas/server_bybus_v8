@@ -15,7 +15,7 @@ app.use(cookieParser());
 
 // Enabling CORS for some specific origins only.
 let corsOptions = {
-  origin: ['http://localhost:5173', 'localhost:5173'],
+  origin: ['http://localhost:5173', 'localhost:5173', 'http://localhost:5174', 'localhost:5174'],
   optionsSuccessStatus: 200,
   credentials: true,
 };
@@ -30,7 +30,7 @@ const start = async () => {
   try {
     await sequelize.authenticate();
     await sequelize.sync();
-    // await sequelize.sync({ alter: true })
+    // await sequelize.sync({ alter: true });
     app.listen(PORT, console.log('Server started on port ', PORT));
   } catch (e) {
     console.log(e);
