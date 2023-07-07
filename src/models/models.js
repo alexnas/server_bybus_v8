@@ -4,26 +4,26 @@ const { DataTypes } = require('sequelize');
 const User = sequelize.define('user', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
-	name:  { type: DataTypes.STRING, unique: true, allowNull: false },
+  name: { type: DataTypes.STRING, unique: true, allowNull: false },
   password: { type: DataTypes.STRING },
 });
 
 const RefreshToken = sequelize.define('refresh_token', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  tokenValue: {type: DataTypes.STRING, unique: true, allowNull: false },
-	userId: {type: DataTypes.INTEGER, allowNull: false },
+  tokenValue: { type: DataTypes.STRING, unique: true, allowNull: false },
+  userId: { type: DataTypes.INTEGER, allowNull: false },
 });
 
 const Role = sequelize.define('role', {
-	id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true},
-	name: {type: DataTypes.STRING, unique: true, allowNull: false },
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  name: { type: DataTypes.STRING, unique: true, allowNull: false },
   description: { type: DataTypes.STRING },
 });
 
 const Comment = sequelize.define('comment', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   title: { type: DataTypes.STRING, allowNull: false },
-  text: { type: DataTypes.STRING, },
+  text: { type: DataTypes.STRING },
 });
 
 const Company = sequelize.define('company', {
@@ -119,20 +119,20 @@ const BusService = sequelize.define('bus_service', {
   description: { type: DataTypes.STRING },
 });
 
-const ROLES = ["user", "admin", "moderator"];
+const ROLES = ['user', 'admin', 'moderator'];
 
 User.hasOne(RefreshToken);
 RefreshToken.belongsTo(User, { foreignKey: 'userId' });
 
 Role.belongsToMany(User, {
-  through: "user_role",
-  foreignKey: "roleId",
-  otherKey: "userId"
+  through: 'user_role',
+  foreignKey: 'roleId',
+  otherKey: 'userId',
 });
 User.belongsToMany(Role, {
-  through: "user_role",
-  foreignKey: "userId",
-  otherKey: "roleId"
+  through: 'user_role',
+  foreignKey: 'userId',
+  otherKey: 'roleId',
 });
 
 City.hasMany(Route, {
@@ -212,8 +212,8 @@ BusInfo.belongsTo(BusService);
 
 module.exports = {
   User,
-	RefreshToken,
-	Role,
+  RefreshToken,
+  Role,
   Comment,
   Company,
   CompanyInfo,
