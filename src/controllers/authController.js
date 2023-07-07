@@ -11,11 +11,12 @@ class AuthController {
         return next(ApiError.wrongValue(`Singup validation error: ${errors.array()[0].msg} of ${errors.array()[0].param}`));
       }
 
-      let { name, email, password, roles } = req.body;
-      const { roleIds } = await authService.getSignupRoleIds(roles, next);
-      let userData = await authService.signupService(name, email, password, roleIds, next);
+      let { name, email, password, roleId = 1, isActive = true } = req.body;
+
+      let userData = await authService.signupService(name, email, password, roleId, isActive, next);
       tokenService.setCookieToken(res, userData.refreshToken);
 
+      // const user = { ...userData.user, password: '' };
       return res.json({ user: userData.user, token: userData.accessToken });
     } catch (e) {
       return next(ApiError.internal('Unforseen error during signup'));
@@ -28,7 +29,9 @@ class AuthController {
       let userData = await authService.loginService(email, password, next);
       tokenService.setCookieToken(res, userData.refreshToken);
 
+      // const user = { ...userData.user, password: '' };
       return res.json({ user: userData.user, token: userData.accessToken });
+      // return res.json({ user: userData.user, token: userData.accessToken });
     } catch (e) {
       return next(ApiError.internal('Unforseen error during login'));
     }
@@ -37,11 +40,16 @@ class AuthController {
   async logout(req, res, next) {
     try {
       const { refreshToken } = req.cookies;
-      const token = await authService.logoutService(refreshToken, next);
-      tokenService.clearCookieToken(res);
+      console.log('logout ====== refreshToken ==== ', refreshToken);
+      const logoutResult = await tokenService.removeToken(refreshToken, next);
+
+      if (logoutResult.isRemoveSuccess) {
+        tokenService.clearCookieToken(res);
+      }
 
       res.status(200).json({
         status: 'success',
+        message: logoutResult.message,
       });
     } catch (e) {
       return next(ApiError.internal('Unforseen error during logout'));
@@ -51,10 +59,19 @@ class AuthController {
   async refresh(req, res, next) {
     try {
       const { refreshToken } = req.cookies;
+      console.log('refreshToken1 ========', refreshToken);
       let userData = await authService.refreshService(refreshToken, next);
-      tokenService.setCookieToken(res, userData.refreshToken);
+      console.log('refreshToken2 ===========', userData);
+      if (!userData.isRefreshedSuccess) {
+        console.log('refreshToken3 ===========', refreshToken);
+        tokenService.removeToken(refreshToken, next);
+      } else {
+        tokenService.setCookieToken(res, userData.refreshToken);
+      }
 
-      return res.json({ userData });
+      // const user = { ...userData.user, password: '' };
+      return res.json({ user: userData.user, token: userData.accessToken });
+      // return res.json({ user: userData.user, token: userData.accessToken });
     } catch (e) {
       return next(ApiError.internal('Unforseen error during refresh'));
     }
