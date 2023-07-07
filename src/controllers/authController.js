@@ -6,8 +6,8 @@ const tokenService = require('../services/tokenService');
 class AuthController {
   async signup(req, res, next) {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
+      const { errors } = validationResult(req);
+      if (!!errors?.length) {
         return next(ApiError.wrongValue(`Singup validation error: ${errors.array()[0].msg} of ${errors.array()[0].param}`));
       }
 
