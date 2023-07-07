@@ -6,7 +6,10 @@ const { checkDuplicates, checkRolesValid } = require('../middleware/VerifySignup
 
 router.post(
   '/signup',
-  [checkDuplicates, checkRolesValid],
+  [
+    checkDuplicates,
+    // checkRolesValid
+  ],
   body('email').isEmail(),
   body('password').isLength({ min: 6, max: 32 }),
   body('name').isLength({ min: 5, max: 32 }),

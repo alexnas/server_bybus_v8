@@ -31,13 +31,17 @@ class TokenService {
 
   async removeToken(refreshToken, next) {
     try {
-      const tokenToRemove = await RefreshToken.findOne({ where: { tokenValue: refreshToken } });
-      if (!tokenToRemove) {
-        return next(ApiError.badRequest('There is no such token registered'));
+      if (!refreshToken) {
+        return { isRemoveSuccess: false, message: 'The refreshToken was not recieved from client' };
       }
-      const tokenData = await tokenToRemove.destroy();
 
-      return { message: 'RefreshToken is removed successfully' };
+      const tokenToRemove = await RefreshToken.findOne({ where: { tokenValue: refreshToken } });
+      if (tokenToRemove) {
+        await tokenToRemove.destroy();
+        return { isRemoveSuccess: true, message: 'RefreshToken is removed successfully' };
+      } else {
+        return { isRemoveSuccess: false, message: 'There is no such token registered' };
+      }
     } catch (e) {
       return next(ApiError.wrongValue('RemoveToken Error'));
     }
