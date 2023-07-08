@@ -72,6 +72,15 @@ class UserController {
     }
   }
 
+  async checkConnection(req, res, next) {
+    try {
+      const users = await userService.getAllUsers();
+      res.json({ isDbConnected: true, dbConnectionMsg: 'Db is connected' });
+    } catch (e) {
+      return next(e);
+    }
+  }
+
   async checkUserExist(req, res, next) {
     let { email } = req.query;
     console.log('=== is this email in DB? ===============', 'email', '=====>>>', email);

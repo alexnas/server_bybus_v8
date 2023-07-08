@@ -9,6 +9,7 @@ router.post('/', userController.create);
 router.put('/:id', userController.update);
 router.delete('/:id', userController.delete);
 router.get('/checkuser', userController.checkUserExist);
+router.get('/isconnected', userController.checkConnection);
 
 router.get('/test/user', [authMiddleware], userController.userBoard);
 router.get('/test/mod', [authMiddleware, isModeratorMiddleware], userController.moderatorBoard);
