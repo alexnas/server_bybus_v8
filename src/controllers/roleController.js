@@ -13,7 +13,6 @@ class RoleController {
         return next(ApiError.wrongValue('This role name is already registered'));
       }
 
-      console.log('CREATE', name, description);
       const role = await Role.create({ name, description });
       res.json(role);
     } catch (e) {
@@ -22,7 +21,6 @@ class RoleController {
   }
 
   async getAll(req, res) {
-    console.log('GET ALL ==========');
     const roles = await Role.findAll();
     res.json(roles);
   }

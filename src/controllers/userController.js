@@ -43,8 +43,6 @@ class UserController {
     const { id } = req.params;
     let { name, email, roleId, isActive } = req.body;
 
-    console.log('createUser =================', name, email, roleId, isActive);
-
     try {
       if (!name || name.trim() === '' || email.trim() === '') {
         return next(ApiError.wrongValue('Name is not defined'));
@@ -83,16 +81,12 @@ class UserController {
 
   async checkUserExist(req, res, next) {
     let { email } = req.query;
-    console.log('=== is this email in DB? ===============', 'email', '=====>>>', email);
     try {
       if (email.trim() === '') {
         return next(ApiError.wrongValue('Email is not defined'));
       }
 
       const user = await User.findOne({ where: { email } });
-      // user = { ...user, password: '' };
-      console.log('=== is this email in DB? === email & user ===============', email, '&&& =====>>>', user);
-
       res.json(user);
     } catch (e) {
       return next(ApiError.internal('Server error'));

@@ -78,7 +78,6 @@ class CompanyController {
       // Destroy old image on Cloud File Server
       if (isNewFile && isCloudinaryUrl) {
         const imageDestroyResponse = await destroyImageService(next, company.logo);
-        console.log('====================== imageDestroyResponse__OUTSIDE =========', imageDestroyResponse);
       }
 
       // Upload new image file into Cloud File Server
@@ -106,7 +105,6 @@ class CompanyController {
       }
       if (company.logo) {
         const imageDestroyResponse = await destroyImageService(next, company.logo);
-        console.log('====================== imageDestroyResponse__OUTSIDE =========', imageDestroyResponse);
       }
       await company.destroy();
       res.json(id);
@@ -157,7 +155,6 @@ class CompanyController {
         const companiesToUpdate = filterUnusedGbbDbImages(gbbDbImagesToDestroy);
         await companiesToUpdate.forEach((companyToUpdate) => {
           const logo = 'LOGO';
-          // companyToUpdate.update({logo})
         });
       }
 
