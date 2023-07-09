@@ -16,7 +16,6 @@ class AuthController {
       let userData = await authService.signupService(name, email, password, roleId, isActive, next);
       tokenService.setCookieToken(res, userData.refreshToken);
 
-      // const user = { ...userData.user, password: '' };
       return res.json({ user: userData.user, token: userData.accessToken });
     } catch (e) {
       return next(ApiError.internal('Unforseen error during signup'));
@@ -29,9 +28,7 @@ class AuthController {
       let userData = await authService.loginService(email, password, next);
       tokenService.setCookieToken(res, userData.refreshToken);
 
-      // const user = { ...userData.user, password: '' };
       return res.json({ user: userData.user, token: userData.accessToken });
-      // return res.json({ user: userData.user, token: userData.accessToken });
     } catch (e) {
       return next(ApiError.internal('Unforseen error during login'));
     }
@@ -40,7 +37,6 @@ class AuthController {
   async logout(req, res, next) {
     try {
       const { refreshToken } = req.cookies;
-      console.log('logout ====== refreshToken ==== ', refreshToken);
       const logoutResult = await tokenService.removeToken(refreshToken, next);
 
       if (logoutResult.isRemoveSuccess) {
@@ -59,19 +55,14 @@ class AuthController {
   async refresh(req, res, next) {
     try {
       const { refreshToken } = req.cookies;
-      console.log('refreshToken1 ========', refreshToken);
       let userData = await authService.refreshService(refreshToken, next);
-      console.log('refreshToken2 ===========', userData);
       if (!userData.isRefreshedSuccess) {
-        console.log('refreshToken3 ===========', refreshToken);
         tokenService.removeToken(refreshToken, next);
       } else {
         tokenService.setCookieToken(res, userData.refreshToken);
       }
 
-      // const user = { ...userData.user, password: '' };
       return res.json({ user: userData.user, token: userData.accessToken });
-      // return res.json({ user: userData.user, token: userData.accessToken });
     } catch (e) {
       return next(ApiError.internal('Unforseen error during refresh'));
     }

@@ -15,7 +15,6 @@ class AuthService {
 
       const allRoles = await Role.findAll();
       const roles = requestRoles ? requestRoles : [DEFAULT_ROLE];
-      // const roles = requestRoles ? JSON.parse(requestRoles) : [DEFAULT_ROLE];
       const roleIds = allRoles.filter((role) => roles.includes(role.name)).map((role) => +role.id);
       const roleNames = allRoles.filter((role) => roles.includes(role.name)).map((role) => role.name);
       return { roleIds, roleNames };
@@ -25,15 +24,11 @@ class AuthService {
   }
 
   async signupService(name, email, password, roleId, isActive, next) {
-    console.log('signupService:  =======', name, email, password, roleId, isActive);
-
     try {
       const hashPassword = await bcrypt.hash(password, 5);
       const user = await User.create({ email, name, roleId, isActive, password: hashPassword });
       const tokens = tokenService.generateTokens({ email: user.email });
       await tokenService.saveToken(next, user.id, tokens.refreshToken);
-
-      console.log('user ==========', user.dataValues);
 
       return { user: user.dataValues, ...tokens };
     } catch (e) {
@@ -94,17 +89,14 @@ class AuthService {
       const tokenFromDb = await tokenService.findToken(refreshToken, next);
       if (!tokenData || !tokenFromDb) {
         return { isRefreshedSuccess: false, message: 'The relevant refreshToken data does not exist' };
-        // return next(ApiError.unAuthorized('User Is Not Authorized'));
       }
 
       const user = await User.findOne({ where: { email: tokenData.email } });
-      // const userObj = await this.getUserObjWithRoles(user, next);
 
       const tokens = tokenService.generateTokens({ email: user.email });
       await tokenService.saveToken(next, user.id, tokens.refreshToken);
 
       return { isRefreshedSuccess: true, user, ...tokens };
-      // return { isRefreshedSuccess: true, user: userObj, ...tokens };
     } catch (e) {
       return next(ApiError.internal('Unforseen error in refresh service'));
     }
