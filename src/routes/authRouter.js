@@ -10,9 +10,9 @@ router.post(
     checkDuplicates,
     // checkRolesValid
   ],
+  body('name').isLength({ min: 3, max: 50 }),
   body('email').isEmail(),
-  body('password').isLength({ min: 6, max: 32 }),
-  body('name').isLength({ min: 5, max: 32 }),
+  body('password').isLength({ min: 5, max: 50 }),
   authController.signup
 );
 router.post('/login', authController.login);
